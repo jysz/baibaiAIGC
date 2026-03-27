@@ -145,6 +145,15 @@ user-invocable: true
 - 只有当明确使用 `scripts/run_aigc_round.py` 走脚本 API 模式，并希望脚本自动逐块调用外部模型接口时，才需要提供上述 API 参数或等价的命令行参数。
 - 如果脚本模式下未提供 API 配置，脚本不应伪装成“已完成改写”；默认应直接报错，或仅在用户显式要求 dry-run 时执行切块与 prompt 校验。无论如何，都不能把“缺少脚本 API 配置”错误表述为“对话 skill 模式也无法执行”。
 
+当用户是在聊天框中直接提出“降 AIGC”“降 ai”“去 AI 味”等请求时，必须默认优先走对话 skill 模式，而不是脚本 API 模式。除非用户明确要求“运行 `scripts/run_aigc_round.py`”“走脚本/API 模式”“用命令行批处理”，否则不得因为仓库里存在脚本入口，就擅自切换到脚本 API 路径。
+
+如果代理在处理中发现 `BAIBAIAIGC_API_KEY`、`BAIBAIAIGC_MODEL`、`BAIBAIAIGC_BASE_URL` 缺失、为空，或者用户明确表示跳过提供这些值，必须遵守以下回退规则：
+
+- 不得将当前降 AIGC 任务判定为无法继续。
+- 不得反复向用户索取同一组 API 变量。
+- 必须立即回退到对话 skill 模式，继续执行当前应执行的一轮改写。
+- 即使脚本 API 模式失败、缺参或被跳过，也仍应继续完成：读取记录、判定轮次、读取 prompt、分块改写、按 checklist 评分，并提醒用户如需下一轮需新开对话。
+
 当本 skill 在聊天框中直接执行时，推荐遵循下面的内部调用顺序：
 
 1. 用 `scripts/skill_round_helper.py` 解析用户给出的文件路径或文本来源，并构建当前轮 `RoundContext`。

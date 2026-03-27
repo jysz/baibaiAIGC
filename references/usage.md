@@ -45,6 +45,8 @@
 1. 如果是在聊天对话中直接调用本 skill 做当前轮改写，不应要求用户提供 `BAIBAIAIGC_API_KEY`、`BAIBAIAIGC_MODEL`、`BAIBAIAIGC_BASE_URL`。
 2. 只有当明确要运行 `scripts/run_aigc_round.py`，并让脚本自动调用外部 OpenAI 兼容接口时，才需要提供上述环境变量或对应命令行参数。
 3. 如果脚本模式下没有提供 API 配置，正确的理解应是“脚本不会自动改写”；此时要么补齐 `api_key + model + base_url`，要么显式加 `--dry-run` 仅做切块与 prompt 输入校验，而不是把它理解成“对话 skill 模式也无法使用”。
+4. 如果用户是在聊天框里直接说“降 AIGC”“降 ai”“去 AI 味”，应默认优先走对话 skill 模式；除非用户明确要求跑脚本，否则不要主动切到 `scripts/run_aigc_round.py`。
+5. 即使脚本 API 变量缺失、为空，或者用户跳过提供，也不应停止任务；应立即回退到对话 skill 路径，继续完成当前轮改写，而不是反复索取同一组变量。
 
 ## 推荐调用示例
 
