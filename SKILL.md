@@ -40,11 +40,10 @@ user-invocable: true
 - 如果 `origin/` 中存在对应原始文件：直接读取并继续执行。
 - 如果 `origin/` 中不存在对应原始文件：先要求用户上传文件，或提示用户先将原始文件放入 `origin/` 目录，再继续执行。
 
-如果用户上传的是 `.docx` 文件：先检查是否已安装 `https://github.com/anthropics/skills/tree/main/skills/docx` 对应的 docx 读写 skill。
+如果用户上传的是 `.docx` 文件：仍按“基于文件”的方式处理输入，本 skill 只负责对文本内容进行三轮改写，`.docx` 的读取与写回由外部工具或脚本完成。
 
-- 如果已安装：直接使用该 docx skill 读取输入 docx，并在完成改写后写回 docx。
-- 如果未安装：必须先安装该 docx skill，再使用它读取和写回 docx。
-- 不要在未确认 docx skill 可用时直接把 `.docx` 当普通文本文件处理。
+- 推荐做法是：将输入 `.docx` 放入工作区根目录的 `origin/` 目录中，由外部工具（例如本仓库的 `scripts/docx_pipeline.py`）先将文档正文提取为纯文本，再把纯文本交给本 skill 处理，最终再通过同类工具将改写后的文本写回新的 `.docx` 文件。
+- 在没有外部工具时，不要直接把 `.docx` 当作普通文本文件逐行读取，而应要求用户先用其他工具将 `.docx` 转换为纯文本后再继续三轮改写。
 
 如果用户提供多段内容：逐段处理，但保持整体段落顺序和编号格式不变。
 
@@ -56,7 +55,7 @@ user-invocable: true
 
 如果输入是 `.docx`，则完整流程应理解为：
 
-`确认 docx skill 已安装 -> 用 docx skill 读取 docx -> 执行三轮顺序改写 -> 按 checklist.md 检查 -> 用 docx skill 写出结果到 finish 目录`
+`确认 `origin/`中存在对应输入 docx -> 用外部工具将 docx 提取为纯文本 -> 执行三轮顺序改写 -> 按 checklist.md 检查 -> 将最终文本交给外部工具写出为新的 docx 到`finish/` 目录`
 
 禁止使用以下做法：
 

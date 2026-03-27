@@ -1,0 +1,19 @@
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Virtual environments
+.venv/
+
+# VS Code / editor
+.vscode/
+
+# Local agents and config not for git
+.agents/
+
+# GitHub metadata (CI, skills, etc.)
+.github/
+
+# OS files
+.DS_Store
+Thumbs.db
