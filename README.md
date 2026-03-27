@@ -30,6 +30,11 @@
 - 把整篇长文一次性整体重写
 - 为了“过检测”而随意改动事实或专业内容
 
+## 效果
+![Uploading image.png…]()
+![Uploading image.png…]()
+
+
 ## 目录结构
 
 ```text
