@@ -30,6 +30,9 @@
 - 把整篇长文一次性整体重写
 - 为了“过检测”而随意改动事实或专业内容
 
+## 用前需知
+- 长文件建议使用脚本，直接在聊天框效果不佳
+
 ## 效果
 <img width="1910" height="915" alt="image" src="https://github.com/user-attachments/assets/356ec75b-52eb-4054-a5cd-25e986fc0245" />
 
