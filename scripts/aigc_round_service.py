@@ -25,7 +25,11 @@ def normalize_path(path: Path) -> Path:
 
 def relative_to_root(path: Path) -> str:
     normalized = normalize_path(path)
-    return str(normalized.relative_to(ROOT_DIR)).replace("\\", "/")
+    try:
+        relative = normalized.relative_to(ROOT_DIR)
+        return str(relative).replace("\\", "/")
+    except ValueError:
+        return str(normalized)
 
 
 def load_prompt(round_number: int) -> str:

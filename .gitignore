@@ -1,19 +1,26 @@
-# Python cache
+# Python
 __pycache__/
 *.py[cod]
-
-# Virtual environments
 .venv/
 
-# VS Code / editor
-.vscode/
+# Node / Vite
+app/node_modules/
+app/dist/
 
-# Local agents and config not for git
+# Tauri / Rust build output
+app/src-tauri/target/
+
+# Generated runtime outputs
+finish/
+origin/
+
+# Editor / local config
+.vscode/
 .agents/
+
+# OS junk
+.DS_Store
+Thumbs.db
 
 # GitHub metadata (CI, skills, etc.)
 .github/
-
-# OS files
-.DS_Store
-Thumbs.db

@@ -31,14 +31,14 @@
 - 为了“过检测”而随意改动事实或专业内容
 
 ## 用前需知
+
 - 长文件建议使用脚本，直接在聊天框效果不佳
 
 ## 效果
+
 <img width="1910" height="915" alt="image" src="https://github.com/user-attachments/assets/356ec75b-52eb-4054-a5cd-25e986fc0245" />
 
 <img width="1910" height="915" alt="image" src="https://github.com/user-attachments/assets/c36e4a48-4192-4d78-ad3c-6c0787be1fa1" />
-
-
 
 ## 目录结构
 
@@ -91,6 +91,72 @@ pip install -r requirements.txt
 当前依赖非常少：
 
 - `python-docx`：用于 `.docx` 文本提取和回写
+
+## Windows App 开发中
+
+仓库已经新增一套 `Tauri + React + TypeScript` 的 Windows 桌面端骨架，目录位于 [app/package.json](d:/code/baibaiAIGC/app/package.json) 对应的 `app/` 目录。
+
+当前实现状态：
+
+- 已完成桌面端基础目录与 Tauri 壳。
+- 已完成中文、浅色、简洁苹果风的首页骨架。
+- 已完成 Python App 服务层，用于给桌面端统一提供模型配置、文档状态查询、单轮执行、文本预览和导出能力。
+- 已支持桌面端离线联调模式，不填模型配置也能演示完整单轮流程，便于先验证导入、状态、导出和 UI 交互。
+- 当前版本仍属于 MVP 骨架，后续还需要继续增强：执行进度反馈、错误提示细化、安装包内嵌 Python、历史轮次视图等。
+
+新增的关键文件：
+
+- [scripts/app_config.py](d:/code/baibaiAIGC/scripts/app_config.py)：保存和读取桌面端模型配置。
+- [scripts/app_service.py](d:/code/baibaiAIGC/scripts/app_service.py)：桌面端和后续脚本共用的应用服务层。
+- [app/src/App.tsx](d:/code/baibaiAIGC/app/src/App.tsx)：桌面端主页。
+- [app/src/styles/global.css](d:/code/baibaiAIGC/app/src/styles/global.css)：桌面端全局样式。
+- [app/src-tauri/src/main.rs](d:/code/baibaiAIGC/app/src-tauri/src/main.rs)：Tauri 命令桥接层。
+
+本地开发桌面端：
+
+```powershell
+cd app
+npm install
+npm run build
+```
+
+桌面端当前已验证：
+
+- 前端构建通过。
+- Python 服务层已实际跑通 `导入 -> 状态 -> 单轮执行 -> 预览 -> TXT 导出 -> DOCX 导出` 闭环。
+- 可通过“离线联调模式”在不填写 API Key 的情况下验证桌面流程。
+- `scripts/app_service.py run-round` 已支持 `--config-file`，可直接从 JSON 文件读取模型配置，避免 PowerShell 下的 JSON 转义问题。
+
+如果本机已经具备 Rust / Tauri 开发环境，可以继续：
+
+```powershell
+cd app
+npm run tauri dev
+```
+
+Windows 端运行 `npm run tauri dev` 之前，还需要确保本机安装了以下组件：
+
+- Visual Studio Build Tools 2022 或 Visual Studio 2022
+- MSVC v143 C++ build tools
+- Windows 10/11 SDK
+
+如果缺少这些组件，`tauri info` 会报错，桌面端无法真正启动，但这不影响前端构建和 Python 服务层联调。
+
+当前桌面端调用的仍然是仓库里的 Python 逻辑，因此原有脚本入口仍然保留可用。
+
+如果要单独调试桌面端 Python 服务层，也可以这样运行离线模式：
+
+```powershell
+d:/code/baibaiAIGC/.venv/Scripts/python.exe scripts/app_service.py run-round origin/sample_input.txt --config-file finish/intermediate/sample_offline_config.json
+```
+
+其中 [finish/intermediate/sample_offline_config.json](d:/code/baibaiAIGC/finish/intermediate/sample_offline_config.json) 是一个最小示例：
+
+```json
+{
+  "offlineMode": true
+}
+```
 
 ## 快速开始
 
@@ -366,5 +432,7 @@ python scripts/aigc_records.py show origin/毕业论文_原始_utf8.txt
 ## 说明
 
 这个 README 面向后续使用者，目的是让使用方式、目录约定和执行边界一次说清。更严格的行为约束以 [SKILL.md](SKILL.md) 为准。
+
 ## 🙏 致谢
+
 感谢 [linuxdo（linux.do） ](https://linux.do/) 社区的交流、分享与反馈。
