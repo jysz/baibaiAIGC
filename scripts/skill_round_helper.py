@@ -6,11 +6,12 @@ from pathlib import Path
 from typing import Callable
 
 from aigc_records import ROOT_DIR, load_records
-from aigc_round_service import PROMPTS, normalize_path, relative_to_root, run_round
+from aigc_round_service import MAX_ROUNDS, PROMPTS, normalize_path, relative_to_root, run_round
 from docx_pipeline import read_docx_text
 
 
 Transform = Callable[[str, str, int, str], str]
+ProgressCallback = Callable[[dict[str, object]], None]
 INTERMEDIATE_DIR = ROOT_DIR / "finish" / "intermediate"
 
 
@@ -40,23 +41,53 @@ class RoundContext:
         }
 
 
-def detect_next_round(doc_id: str) -> int:
+@dataclass
+class DocumentRoundState:
+    doc_id: str
+    completed_rounds: list[int]
+    next_round: int | None
+    is_complete: bool
+
+
+def get_document_round_state(doc_id: str) -> DocumentRoundState:
     rounds = _get_rounds(doc_id)
     completed = sorted(
         round_item.get("round")
         for round_item in rounds
-        if isinstance(round_item, dict) and isinstance(round_item.get("round"), int)
+        if isinstance(round_item, dict)
+        and isinstance(round_item.get("round"), int)
+        and 1 <= int(round_item.get("round")) <= MAX_ROUNDS
     )
-    for expected in (1, 2, 3):
+    for expected in range(1, MAX_ROUNDS + 1):
         if expected not in completed:
-            return expected
-    raise ValueError(f"Document already completed all 3 rounds: {doc_id}")
+            return DocumentRoundState(
+                doc_id=doc_id,
+                completed_rounds=completed,
+                next_round=expected,
+                is_complete=False,
+            )
+    return DocumentRoundState(
+        doc_id=doc_id,
+        completed_rounds=completed,
+        next_round=None,
+        is_complete=True,
+    )
+
+
+def detect_next_round(doc_id: str) -> int:
+    state = get_document_round_state(doc_id)
+    if state.next_round is None:
+        raise ValueError(f"Document already completed all {MAX_ROUNDS} rounds: {doc_id}")
+    return state.next_round
 
 
 def build_round_context(source_path: Path | str, round_number: int | None = None) -> RoundContext:
     normalized_source = normalize_path(Path(source_path))
     doc_id = _build_doc_id(normalized_source)
     resolved_round = round_number or detect_next_round(doc_id)
+
+    if resolved_round not in PROMPTS:
+        raise ValueError(f"Round {resolved_round} is not available for document: {doc_id}")
 
     if resolved_round == 1:
         input_text_path, extracted_from_docx = ensure_skill_input_text(normalized_source)
@@ -98,7 +129,12 @@ def ensure_skill_input_text(source_path: Path | str) -> tuple[Path, bool]:
     raise ValueError(f"Unsupported input type for skill mode: {normalized_source}")
 
 
-def run_skill_round(source_path: Path | str, transform: Transform, round_number: int | None = None) -> dict:
+def run_skill_round(
+    source_path: Path | str,
+    transform: Transform,
+    round_number: int | None = None,
+    progress_callback: ProgressCallback | None = None,
+) -> dict:
     context = build_round_context(source_path, round_number=round_number)
     result = run_round(
         doc_id=context.doc_id,
@@ -107,6 +143,7 @@ def run_skill_round(source_path: Path | str, transform: Transform, round_number:
         output_path=context.output_text_path,
         manifest_path=context.manifest_path,
         transform=transform,
+        progress_callback=progress_callback,
     )
     result["skill_context"] = context.to_dict()
     return result
